@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pas &amp; Avatar</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f9e6e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pas &amp; Avatar">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
+<style>
+:root{--bg:#e8f3ec;--card:#fff;--tx:#12332a;--mut:#5b7a6e;--ac:#2f9e6e;--gold:#f2b705;--bar:#d3e5da;--ring:#cfe3d6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1d18;--card:#16302a;--tx:#e9f5ee;--mut:#8fb2a2;--ac:#4cc58f;--gold:#ffd04a;--bar:#24443b;--ring:#24443b}}
+:root[data-theme="dark"]{--bg:#0e1d18;--card:#16302a;--tx:#e9f5ee;--mut:#8fb2a2;--ac:#4cc58f;--gold:#ffd04a;--bar:#24443b;--ring:#24443b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:440px;margin:0 auto;padding:16px 16px 28px}
+h1,.big{font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;margin:0}
+h1{font-size:22px;font-weight:800}
+.tabs{display:flex;gap:6px;margin:12px 0}
+.tabs button{flex:1;padding:9px 6px;border:2px solid var(--bar);background:transparent;color:var(--tx);border-radius:12px;font:600 14px system-ui;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+.hero{position:relative;width:250px;height:250px;margin:8px auto}
+.hero svg{width:100%;height:100%;transform:rotate(-90deg)}
+.hero .face{position:absolute;inset:0;display:grid;place-items:center;font-size:104px;line-height:1}
+.face.pop{animation:pop .7s ease}
+@keyframes pop{0%{transform:scale(.6) rotate(-8deg)}60%{transform:scale(1.25) rotate(6deg)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.face.pop{animation:none}}
+.name{text-align:center;font-size:24px;font-weight:800}
+.sub{text-align:center;color:var(--mut);font-size:14px;margin:2px 0 14px}
+.steps{text-align:center;font-size:34px;font-weight:800;margin:0}
+.box{background:var(--card);border-radius:16px;padding:14px;margin-top:12px}
+.row{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-bottom:6px}
+.bar{height:12px;border-radius:8px;background:var(--bar);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--gold);border-radius:8px;transition:width .4s}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btns button{flex:1 1 40%;padding:12px 8px;border:0;border-radius:12px;font:600 14px system-ui;cursor:pointer;background:var(--bar);color:var(--tx)}
+.btns button.main{flex-basis:100%;background:var(--ac);color:#fff}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#st{font-size:13px;color:var(--mut);margin:10px 2px 0}
+#msg{min-height:20px;text-align:center;font-weight:600;color:var(--ac);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>Pas &amp; Avatar</h1>
+<div class="tabs" id="tabs" role="group" aria-label="Choisir un avatar"></div>
+
+<div class="hero">
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" fill="none" stroke="var(--ring)" stroke-width="9"/>
+    <circle id="arc" cx="60" cy="60" r="54" fill="none" stroke="var(--ac)" stroke-width="9" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3" style="transition:stroke-dashoffset .4s"/>
+  </svg>
+  <div class="face" id="face"></div>
+</div>
+<div class="name" id="name"></div>
+<div class="sub" id="sub"></div>
+
+<p class="steps"><span id="today">0</span> <span style="font-size:16px;color:var(--mut)">pas aujourd’hui</span></p>
+<div id="msg" aria-live="polite"></div>
+
+<div class="box">
+  <div class="row"><span>Objectif du jour</span><span id="goalTxt"></span></div>
+  <div class="bar"><i id="gbar"></i></div>
+</div>
+<div class="box">
+  <div class="row"><span>Prochaine évolution</span><span id="nextTxt"></span></div>
+  <div class="bar"><i id="xbar"></i></div>
+  <div class="row" style="margin:10px 0 0"><span>Total : <b id="total"></b> pas</span><span>Série : <b id="streak"></b> jour(s)</span></div>
+</div>
+
+<div class="btns">
+  <button class="main" id="sensor">Activer le capteur de mouvement</button>
+  <button id="p100">+100 pas (test)</button>
+  <button id="p1000">+1 000 pas (test)</button>
+  <button id="reset">Tout remettre à zéro</button>
+</div>
+<p id="st">Sur téléphone, garde la page ouverte et marche : l’accéléromètre détecte chaque pas. Sur ordinateur, utilise les boutons de test.</p>
+</main>
+
+<script>
+var THEMES={
+ animal:{n:"Animal",s:[["🥚","Œuf"],["🐣","Poussin"],["🐥","Poussin agile"],["🦊","Renard"],["🐺","Loup"],["🐉","Dragon"]]},
+ manga:{n:"Manga",s:[["🧒","Apprenti"],["🥷","Ninja"],["⚔️","Samouraï"],["🧘","Maître"],["🧙","Sage"],["👑","Légende"]]},
+ hero:{n:"Héros",s:[["🧑","Recrue"],["🏃","Coureur"],["🦸","Héros"],["🧙","Mage"],["🧝","Elfe"],["👑","Légende"]]}
+};
+var T=[0,2000,8000,20000,50000,100000];
+var KEY="pas-avatar-v1";
+function day(d){return d.toLocaleDateString("sv")}
+function fresh(){return{theme:"animal",total:0,d:day(new Date()),steps:0,goal:8000,streak:0,lastGoal:""}}
+var S=fresh();
+try{var raw=localStorage.getItem(KEY);if(raw){S=Object.assign(fresh(),JSON.parse(raw))}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function lvl(t){var i=0;for(var k=0;k<T.length;k++){if(t>=T[k])i=k}return i}
+var $=function(id){return document.getElementById(id)};
+var fmt=function(n){return n.toLocaleString("fr-FR")};
+var shown=lvl(S.total);
+
+function render(evolved){
+  var th=THEMES[S.theme],i=lvl(S.total),st=th.s[i];
+  $("face").textContent=st[0];
+  $("name").textContent=st[1];
+  $("sub").textContent="Niveau "+(i+1)+" sur "+T.length;
+  $("today").textContent=fmt(S.steps);
+  $("goalTxt").textContent=fmt(Math.min(S.steps,S.goal))+" / "+fmt(S.goal);
+  var gp=Math.min(1,S.steps/S.goal);
+  $("gbar").style.width=(gp*100)+"%";
+  $("arc").style.strokeDashoffset=339.3*(1-gp);
+  if(i<T.length-1){
+    var a=T[i],b=T[i+1];
+    $("xbar").style.width=((S.total-a)/(b-a)*100)+"%";
+    $("nextTxt").textContent="encore "+fmt(b-S.total)+" pas";
+  }else{$("xbar").style.width="100%";$("nextTxt").textContent="niveau max !"}
+  $("total").textContent=fmt(S.total);
+  $("streak").textContent=S.streak;
+  document.querySelectorAll("#tabs button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.t===S.theme)});
+  if(evolved){
+    var f=$("face");f.classList.remove("pop");void f.offsetWidth;f.classList.add("pop");
+    $("msg").textContent="✨ Ton avatar évolue : "+st[1]+" !";
+  }
+}
+
+function add(n){
+  var today=day(new Date());
+  if(S.d!==today){S.d=today;S.steps=0}
+  S.steps+=n;S.total+=n;
+  if(S.steps>=S.goal&&S.lastGoal!==today){
+    var y=day(new Date(Date.now()-864e5));
+    S.streak=(S.lastGoal===y)?S.streak+1:1;
+    S.lastGoal=today;
+    $("msg").textContent="🎯 Objectif atteint ! Série de "+S.streak+" jour(s).";
+  }
+  var i=lvl(S.total),ev=i>shown;shown=i;
+  save();render(ev);
+}
+
+/* Détection de pas par accéléromètre : on lisse la norme de l’accélération,
+   on retire la gravité (9,81 m/s²) et on compte un pic franchi vers le haut,
+   avec un délai minimum de 350 ms entre deux pas. */
+var on=false,last=0,sm=9.81,armed=true;
+function onMotion(e){
+  var a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
+  var m=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+  sm=sm*0.8+m*0.2;
+  var v=sm-9.81,now=Date.now();
+  if(v>0.8&&armed&&now-last>350){armed=false;last=now;add(1)}
+  if(v<0.2)armed=true;
+}
+async function toggle(){
+  var st=$("st"),btn=$("sensor");
+  if(on){window.removeEventListener("devicemotion",onMotion);on=false;btn.textContent="Activer le capteur de mouvement";st.textContent="Capteur arrêté.";return}
+  if(typeof DeviceMotionEvent==="undefined"){st.textContent="Capteur indisponible sur cet appareil : utilise les boutons de test.";return}
+  try{
+    if(typeof DeviceMotionEvent.requestPermission==="function"){
+      var r=await DeviceMotionEvent.requestPermission();
+      if(r!=="granted"){st.textContent="Autorisation refusée : active l’accès aux capteurs de mouvement dans les réglages du navigateur.";return}
+    }
+    window.addEventListener("devicemotion",onMotion);on=true;
+    btn.textContent="Arrêter le capteur";
+    st.textContent="Capteur actif : garde cette page ouverte et marche avec ton téléphone.";
+  }catch(e){st.textContent="Impossible d’activer le capteur : utilise les boutons de test."}
+}
+
+var tabs=$("tabs");
+Object.keys(THEMES).forEach(function(k){
+  var b=document.createElement("button");b.dataset.t=k;b.textContent=THEMES[k].s[3][0]+" "+THEMES[k].n;
+  b.onclick=function(){S.theme=k;save();render(false)};tabs.appendChild(b);
+});
+$("sensor").onclick=toggle;
+$("p100").onclick=function(){add(100)};
+$("p1000").onclick=function(){add(1000)};
+$("reset").onclick=function(){S=fresh();shown=0;$("msg").textContent="";save();render(false)};
+if(S.d!==day(new Date())){S.d=day(new Date());S.steps=0}
+render(false);
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script>
+</body>
+</html>
